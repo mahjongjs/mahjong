@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "target": "ES6",
+    "paths": {
+      "@mahjong/*": [
+        "src/*"
+      ]
+    },
+    "outDir": "dist/"
+  },
+}
