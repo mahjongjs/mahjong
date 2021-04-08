@@ -1,93 +1,94 @@
-import {
-  Card,
-  OrderedCard,
-  OrderedWord,
-  UnorderedWord,
-  CardNum,
-} from '@mahjong/interfaces/Card';
-import { PlayerIndex, PlayerState } from '@mahjong/interfaces/PlayerState';
-import {
-  createSlice,
-  configureStore,
-  applyMiddleware,
-  getDefaultMiddleware,
-} from '@reduxjs/toolkit';
+import { Card } from '@mahjong/interfaces/Card';
+import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
+import { createSlice, configureStore, PayloadAction } from '@reduxjs/toolkit';
 import { clientSyncMiddleware } from './middleware';
 import { logger } from 'redux-logger';
-import { stepPlayer } from '@mahjong/logic';
-const initPlayerHand: (playerIndex: PlayerIndex) => PlayerState = (
-  playerIndex
-) => {
-  return {
-    hand: {
-      rawCards: [],
-    },
-    playerIndex,
-    junkyard: { rawCards: [] },
-  };
-};
+import { isEatable, isTakable, stepPlayer } from '@mahjong/logic';
 
-const initCards: () => Card[] = () => {
-  const cards = [];
-
-  Object.keys(UnorderedWord).forEach((key) => {
-    for (let i = 0; i < 4; i++) {
-      cards.push(new Card(key as UnorderedWord));
-    }
-  });
-
-  Object.keys(OrderedWord).forEach((key) => {
-    for (let i = 1; i <= 9; i++) {
-      cards.push(new OrderedCard(key as OrderedWord, i as CardNum));
-    }
-  });
-
-  return cards;
-};
+import { initializeServerStore } from './initializeStoreData';
 
 export const spawnSession = () => {
   const handSlice = createSlice({
     name: 'board',
-    initialState: {
-      playerIndex: 0 as PlayerIndex,
-      hands: {
-        0: initPlayerHand(0),
-        1: initPlayerHand(1),
-        2: initPlayerHand(2),
-        3: initPlayerHand(3),
-      },
-      table: initCards(),
-    },
+    initialState: initializeServerStore(),
     reducers: {
-      eat: (state, { type, payload }) => {},
-      take: (state, { type, payload }) => {},
+      eat: (
+        state,
+        action: PayloadAction<{
+          actioner: [Card, Card];
+          you: PlayerIndex;
+          actionee: Card;
+          played: PlayerIndex;
+        }>
+      ) => {
+        const { actionee, played, you, actioner } = action.payload;
 
-      takeFront: (state, { type, payload: playerIndex }) => {
-        console.log(playerIndex);
-
-        state.hands[playerIndex];
-        state.table.shift();
+        if (isEatable(actionee, state.hands[you])) {
+        }
       },
-      takeRear: (state, { type, payload: playerIndex }) => {
-        state.table.pop();
+      take: (
+        state,
+        action: PayloadAction<{
+          actioner: [Card, Card];
+          you: PlayerIndex;
+          actionee: Card;
+          played: PlayerIndex;
+        }>
+      ) => {
+        const { actioner, actionee, played, you } = action.payload;
+
+        if (isTakable(actionee, state.hands[you])) {
+          state.hands[played].junkyard.rawCards = state.hands[
+            played
+          ].junkyard.rawCards.filter((jCard) => jCard.id !== actionee.id);
+
+          state.hands[you].junkyard.rawCards.push(actionee, ...actioner);
+          state.hands[you].hand.rawCards = state.hands[
+            you
+          ].hand.rawCards.filter(
+            (hCard) =>
+              hCard.id !== actioner[0].id && hCard.id !== actioner[0].id
+          );
+        }
+      },
+      play: (
+        state,
+        action: PayloadAction<{ player: PlayerIndex; card: Card }>
+      ) => {},
+      takeFront: (state, action: PayloadAction<PlayerIndex>) => {
+        state.hands[action.payload].hand.rawCards.push(state.table.shift());
+      },
+      takeRear: (state, action: PayloadAction<PlayerIndex>) => {
+        state.hands[action.payload].hand.rawCards.push(state.table.pop());
       },
 
-      changePlayer: (state, { type, payload }) => {
-        if (!payload) {
+      changePlayer: (state, action: PayloadAction<PlayerIndex>) => {
+        if (!action.payload) {
           state.playerIndex = stepPlayer(state.playerIndex);
         }
-        state.playerIndex = payload;
+        state.playerIndex = action.payload;
       },
     },
   });
 
+  const store = configureStore({
+    reducer: handSlice.reducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(clientSyncMiddleware, logger),
+  });
+
+  // 初始摸牌
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 4; j++) {
+      store.dispatch(handSlice.actions.takeFront(j as PlayerIndex));
+    }
+  }
+
+  store.dispatch(handSlice.actions.takeFront(0 as PlayerIndex));
+
   return {
     actions: handSlice.actions,
-    store: configureStore({
-      reducer: handSlice.reducer,
-      middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(clientSyncMiddleware),
-    }),
+    store,
   };
 };
 

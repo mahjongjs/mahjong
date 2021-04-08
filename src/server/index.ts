@@ -1,17 +1,56 @@
 import 'tsconfig-paths/register';
 
 import { spawnSession } from '@mahjong/store';
-import Koa from 'koa';
+import { Server, Socket } from 'socket.io';
+import { PayloadAction } from '@reduxjs/toolkit';
+import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
+import { cloneDeep } from 'lodash';
+const socketServer = new Server({ cors: { origin: '*' } });
 
-const server = new Koa();
-server.listen(3555);
-export const dispatchAction = (action) => {
+const socketsMap: Map<PlayerIndex, Socket> = new Map();
+let playerCount = 0;
+
+socketServer.listen(3555);
+
+socketServer.on('connection', (socket) => {
+  if (playerCount >= 4) {
+    return socket.disconnect(true);
+  }
+
+  playerCount++;
+
+  const clientData = exportClientDatafor(playerCount as PlayerIndex);
+  socket.send(clientData);
+  socketsMap.set(playerCount as PlayerIndex, socket);
+});
+
+export const dispatchAction = (action: {
+  recipients: PlayerIndex[];
+  event: PayloadAction<any>;
+}) => {
+  action.recipients.map((recipient) => {});
   console.log(action);
 };
 
 const { actions, store } = spawnSession();
 
-store.dispatch(actions.takeFront(0));
+const exportClientDatafor = (playerIndex: PlayerIndex) => {
+  const serverData = cloneDeep(store.getState());
 
-// console.log(store);
-// store.dispatch({})
+  const hands = serverData.hands;
+
+  for (let i = 0; i < 4; i++) {
+    if (i !== playerIndex) {
+      delete hands[i as PlayerIndex].hand;
+    }
+  }
+
+  return {
+    played: serverData.played,
+    playerIndex,
+    hands,
+    table: serverData.table.length,
+  };
+};
+
+export type ClientStoreType = ReturnType<typeof exportClientDatafor>;

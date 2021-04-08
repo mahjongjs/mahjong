@@ -6,12 +6,12 @@ export const stepPlayer = (currentlyPlaying: PlayerIndex) => {
   return (currentlyPlaying = ((currentlyPlaying + 1) % 4) as PlayerIndex);
 };
 
-function isPreviosPlayer(curr: PlayerIndex, target: PlayerIndex) {
+export function isPreviosPlayer(curr: PlayerIndex, target: PlayerIndex) {
   return curr === target + 1 || (curr === 0 && target === 3);
 }
 
-function isEatable(played: Card, playerState: PlayerState) {
-  if (played instanceof OrderedCard) {
+export function isEatable(played: Card, playerState: PlayerState) {
+  if (played.type === 'Ordered') {
     const cards = playerState.hand.rawCards
       .filter((card) => played.value === card.value)
       //@ts-ignore
@@ -23,7 +23,7 @@ function isEatable(played: Card, playerState: PlayerState) {
   }
 }
 
-function isTakable(played: Card, playerState: PlayerState) {
+export function isTakable(played: Card, playerState: PlayerState) {
   return (
     playerState.hand.rawCards.filter((card) => card.value === played.value)
       .length >= 2

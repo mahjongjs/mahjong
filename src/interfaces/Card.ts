@@ -13,21 +13,17 @@ export enum OrderedWord {
   筒 = '筒',
 }
 
-export class Card {
-  value: OrderedWord | UnorderedWord;
-  constructor(value: OrderedWord | UnorderedWord) {
-    this.value = value;
-  }
-}
-
 export type CardNum = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-export class OrderedCard extends Card {
+export interface OrderedCard {
   value: UnorderedWord;
   number: CardNum;
-
-  constructor(value: OrderedWord | UnorderedWord, number: CardNum) {
-    super(value);
-    this.number = number;
-  }
+  type: 'Ordered';
+  id: string;
 }
+export interface UnorderedCard {
+  value: UnorderedWord;
+  type: 'Unordered';
+  id: string;
+}
+export type Card = OrderedCard | UnorderedCard;
