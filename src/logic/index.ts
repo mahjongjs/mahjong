@@ -1,6 +1,15 @@
 import { OrderedCard, Card } from '@mahjong/interfaces/card';
 import { PlayerIndex, PlayerState } from '@mahjong/interfaces/PlayerState';
 import { eatMap } from './rules';
+import { v4 as uuidv4 } from 'uuid';
+
+export const getUUID = () => {
+  return uuidv4(null, Buffer.alloc(16))
+    .toString('base64')
+    .replace(/\+/g, '-') // Replace + with - (see RFC 4648, sec. 5)
+    .replace(/\//g, '_') // Replace / with _ (see RFC 4648, sec. 5)
+    .substring(0, 22); // Drop '==' padding;
+};
 
 export const stepPlayer = (currentlyPlaying: PlayerIndex) => {
   return (currentlyPlaying = ((currentlyPlaying + 1) % 4) as PlayerIndex);
