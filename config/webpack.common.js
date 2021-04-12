@@ -69,6 +69,8 @@ module.exports = {
     ],
   },
   resolve: {
+    //https://webpack.js.org/configuration/resolve/#resolveextensions
+    extensions: ['.ts', '...'],
     alias: {
       '@mahjong': paths.src,
     },
