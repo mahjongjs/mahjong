@@ -1,4 +1,4 @@
-import { CardNum } from '@mahjong/interfaces/card';
+import { CardNum } from "@mahjong/interfaces/card";
 
 export const eatMap: { [K in CardNum]: CardNum[][] } = {
   1: [[2, 3]],

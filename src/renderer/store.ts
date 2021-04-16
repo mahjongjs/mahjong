@@ -1,31 +1,25 @@
-import { Card } from '@mahjong/interfaces/Card';
-import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
-import { createSlice, configureStore, PayloadAction } from '@reduxjs/toolkit';
-import {
-  clientSyncMiddleware,
-  pauseClientSync,
-  resumeClientSync,
-} from './middleware';
-import { logger } from 'redux-logger';
+import { Card } from "@mahjong/interfaces/Card";
+import { PlayerIndex } from "@mahjong/interfaces/PlayerState";
+import { createSlice, configureStore, PayloadAction } from "@reduxjs/toolkit";
+
+import { logger } from "redux-logger";
 import {
   isEatable,
   isPlayable,
   isTakable,
   removeFromArray,
   stepPlayer,
-} from '@mahjong/logic';
+} from "@mahjong/logic";
+import { ServerStoreData } from "@mahjong/store/initializeStoreData";
 
 export type ActionInitiator = {
   player: PlayerIndex;
 };
 
-import { initializeServerStore } from './initializeStoreData';
-
-export const spawnSession = () => {
+export const spawnSession = (data: ServerStoreData) => {
   const handSlice = createSlice({
-    name: 'board',
-    initialState: initializeServerStore(),
-
+    name: "board",
+    initialState: data,
     reducers: {
       eat: (
         state,
@@ -100,27 +94,11 @@ export const spawnSession = () => {
 
   const store = configureStore({
     reducer: handSlice.reducer,
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(clientSyncMiddleware),
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
   });
-
-  pauseClientSync();
-
-  // 初始摸牌
-  for (let i = 0; i < 13; i++) {
-    for (let j = 0; j < 4; j++) {
-      store.dispatch(handSlice.actions.takeFront({ player: j as PlayerIndex }));
-    }
-  }
-
-  store.dispatch(handSlice.actions.takeFront({ player: 0 as PlayerIndex }));
-
-  resumeClientSync();
 
   return {
     actions: handSlice.actions,
     store,
   };
 };
-
-// applyMiddleware()

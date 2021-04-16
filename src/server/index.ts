@@ -1,56 +1,52 @@
 import 'tsconfig-paths/register';
-
-import { spawnSession } from '@mahjong/store';
-import { Server, Socket } from 'socket.io';
-import { PayloadAction } from '@reduxjs/toolkit';
+import 'reflect-metadata';
+import './container';
+import { Server } from 'socket.io';
 import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
-import { cloneDeep } from 'lodash';
+import attachSocketListener from './attachSocketListener';
+import container from './container';
+import { ISessionService } from './SessionService';
+import tokens from './tokens';
+import { ILoggingService } from './LoggingService';
 const socketServer = new Server({ cors: { origin: '*' } });
 
-const socketsMap: Map<PlayerIndex, Socket> = new Map();
 let playerCount = 0;
 
 socketServer.listen(3555);
+const sessionManager = container.get<ISessionService>(tokens.SessionService);
+const loggerService = container.get<ILoggingService>(tokens.LoggingService);
 
 socketServer.on('connection', (socket) => {
-  if (playerCount >= 4) {
-    return socket.disconnect(true);
-  }
+  const sessionId = socket.handshake.auth.sessionId as string;
 
-  playerCount++;
-
-  const clientData = exportClientDatafor(playerCount as PlayerIndex);
-  socket.send(clientData);
-  socketsMap.set(playerCount as PlayerIndex, socket);
-});
-
-export const dispatchAction = (action: {
-  recipients: PlayerIndex[];
-  event: PayloadAction<any>;
-}) => {
-  action.recipients.map((recipient) => {});
-  console.log(action);
-};
-
-const { actions, store } = spawnSession();
-
-const exportClientDatafor = (playerIndex: PlayerIndex) => {
-  const serverData = cloneDeep(store.getState());
-
-  const hands = serverData.hands;
-
-  for (let i = 0; i < 4; i++) {
-    if (i !== playerIndex) {
-      delete hands[i as PlayerIndex].hand;
+  if (playerCount >= 4 && !sessionId) {
+    if (sessionManager.getCount() === 0) {
+      playerCount = 0;
+      // sessionManager.empty();
+      loggerService.info('restarted');
+    } else {
+      loggerService.warn('player full');
+      return socket.disconnect(true);
     }
   }
 
-  return {
-    played: serverData.played,
-    playerIndex,
-    hands,
-    table: serverData.table.length,
-  };
-};
-
-export type ClientStoreType = ReturnType<typeof exportClientDatafor>;
+  if (sessionId) {
+    const loaded = sessionManager.getSocket(sessionId);
+    if (!loaded) {
+      socket.disconnect(true);
+    } else {
+      loaded.disconnect();
+      sessionManager.setSocket(sessionId, socket);
+      attachSocketListener(
+        socket,
+        sessionManager,
+        sessionManager.getIndexFromId(sessionId)
+      );
+    }
+  } else {
+    const id: PlayerIndex = playerCount++ as PlayerIndex;
+    sessionManager.setSocket(id, socket);
+    attachSocketListener(socket, sessionManager, id);
+    loggerService.info(`player ${id} connected!`);
+  }
+});

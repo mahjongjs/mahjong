@@ -1,6 +1,12 @@
-import { Card, UnorderedWord, OrderedWord } from '@mahjong/interfaces/Card';
-import { PlayerIndex, PlayerState } from '@mahjong/interfaces/PlayerState';
-import { shuffle } from 'lodash';
+import {
+  Card,
+  UnorderedWord,
+  OrderedWord,
+  CardNum,
+} from "@mahjong/interfaces/Card";
+import { PlayerIndex, PlayerState } from "@mahjong/interfaces/PlayerState";
+import { getUUID } from "@mahjong/logic";
+import { shuffle } from "lodash";
 
 const initPlayerHand: (playerIndex: PlayerIndex) => PlayerState = (
   playerIndex
@@ -19,16 +25,23 @@ const initCards: () => Card[] = () => {
 
   Object.keys(UnorderedWord).forEach((key) => {
     for (let i = 0; i < 4; i++) {
-      //@ts-ignore
-      cards.push({ value: key });
+      cards.push({
+        value: key as UnorderedWord,
+        type: "Unordered",
+        id: getUUID(),
+      });
     }
   });
 
   Object.keys(OrderedWord).forEach((key) => {
     for (let i = 1; i <= 9; i++) {
       for (let j = 0; j < 4; j++) {
-        //@ts-ignore
-        cards.push({ value: key, number: i });
+        cards.push({
+          value: key as OrderedWord,
+          number: i as CardNum,
+          type: "Ordered",
+          id: getUUID(),
+        });
       }
     }
   });

@@ -4,6 +4,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const PrettierPlugin = require('prettier-webpack-plugin');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const paths = require('./paths');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
+  .BundleAnalyzerPlugin;
 
 module.exports = {
   // Where webpack looks to start building the bundle
@@ -20,7 +22,7 @@ module.exports = {
   plugins: [
     // Removes/cleans build folders and unused assets when rebuilding
     new CleanWebpackPlugin(),
-
+    new BundleAnalyzerPlugin(),
     // Copies files from target to destination folder
     new CopyWebpackPlugin({
       patterns: [
@@ -57,7 +59,11 @@ module.exports = {
   // Determine how modules within the project are treated
   module: {
     rules: [
-      { test: /\.tsx?$/, loader: 'ts-loader' },
+      {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        // options: { onlyCompileBundledFiles: true },
+      },
       // JavaScript: Use Babel to transpile JavaScript files
       { test: /\.js$/, use: ['babel-loader'] },
 
