@@ -1,6 +1,9 @@
+process.env.IS_SERVER = process.env.IS_SERVER || 'true';
+
 import 'tsconfig-paths/register';
 import 'reflect-metadata';
 import './container';
+
 import { Server } from 'socket.io';
 import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
 import attachSocketListener from './attachSocketListener';
@@ -8,6 +11,7 @@ import container from './container';
 import { ISessionService } from './SessionService';
 import tokens from './tokens';
 import { ILoggingService } from './LoggingService';
+
 const socketServer = new Server({ cors: { origin: '*' } });
 
 let playerCount = 0;

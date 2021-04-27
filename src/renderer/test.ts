@@ -1,5 +1,6 @@
 import { PlayerIndex } from "@mahjong/interfaces/PlayerState";
 import {
+  DISPATCH_CLIENT_ACTION,
   DISPATCH_SERVER_ACTION,
   DUMP_DATA,
   INIT_STORE_DATA,
@@ -7,8 +8,8 @@ import {
 } from "@mahjong/shared/eventDefs";
 import { ServerStoreData } from "@mahjong/store/initializeStoreData";
 import { io } from "socket.io-client";
-import dispatch from "./dispatch";
-import { spawnSession } from "./store";
+import { ActionInitiator, spawnSession } from "@mahjong/store";
+import { PayloadAction } from "@reduxjs/toolkit";
 
 const p0 = io("ws://localhost:3555", {
   auth: {
@@ -45,19 +46,27 @@ arr.map((socket, index: PlayerIndex) => {
   socket.on(INIT_STORE_DATA, (data: ServerStoreData) => {
     const store = spawnSession(data);
 
+    socket.on(
+      DISPATCH_CLIENT_ACTION,
+      (action: PayloadAction<ActionInitiator>) => {
+        store.store.dispatch(action);
+      }
+    );
+
     const btn = document.createElement("button");
 
     btn.textContent = "play " + index.toString();
 
     document.body.appendChild(btn);
     btn.addEventListener("click", () => {
-      dispatch(
-        {
-          type: "play",
-          card: store.store.getState().hands[index].hand.rawCards[0],
-        },
-        socket
-      );
+      const action = store.actions.play({
+        card: store.store.getState().hands[index].hand.rawCards[0],
+        player: index as PlayerIndex,
+      });
+
+      socket.emit(DISPATCH_SERVER_ACTION, action, (response) => {
+        response.status === "ok" && store.store.dispatch(action);
+      });
     });
   });
 });

@@ -8,6 +8,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer')
   .BundleAnalyzerPlugin;
 
 module.exports = {
+  node: { global: true },
   // Where webpack looks to start building the bundle
   entry: [paths.renderer + '/index.ts'],
 
@@ -59,6 +60,21 @@ module.exports = {
   // Determine how modules within the project are treated
   module: {
     rules: [
+      {
+        test: /\.tsx?$/,
+        enforce: 'pre',
+        exclude: /(node_modules|bower_components|\.spec\.js)/,
+        use: [
+          {
+            loader: 'webpack-strip-block',
+            options: {
+              start: 'SERVER-START',
+              end: 'SERVER-END',
+            },
+          },
+        ],
+      },
+
       {
         test: /\.tsx?$/,
         loader: 'ts-loader',

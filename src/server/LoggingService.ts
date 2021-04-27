@@ -1,5 +1,5 @@
-import { injectable } from 'inversify';
-import winston from 'winston';
+import { injectable } from "inversify";
+import winston from "winston";
 
 export interface ILoggingService {
   warn(...args: any[]): void;

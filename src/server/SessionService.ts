@@ -1,9 +1,9 @@
-import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
-import { getUUID } from '@mahjong/logic';
-import { inject, injectable } from 'inversify';
-import { Socket } from 'socket.io';
-import { ILoggingService } from './LoggingService';
-import tokens from './tokens';
+import { PlayerIndex } from "@mahjong/interfaces/PlayerState";
+import { getUUID } from "@mahjong/logic";
+import { inject, injectable } from "inversify";
+import { Socket } from "socket.io";
+import { ILoggingService } from "./LoggingService";
+import tokens from "./tokens";
 
 export interface ISessionService {
   setSocket(key: PlayerIndex | string, socket: Socket): void;
@@ -30,7 +30,7 @@ export class SessionService implements ISessionService {
   }
 
   public setSocket(key: PlayerIndex | string, socket: Socket) {
-    if (typeof key === 'string') {
+    if (typeof key === "string") {
       const index = this.idToIndex.get(key);
       this.map.set(index, socket);
     } else {
@@ -42,7 +42,7 @@ export class SessionService implements ISessionService {
   }
 
   public getSocket(key: PlayerIndex | string) {
-    if (typeof key === 'string') {
+    if (typeof key === "string") {
       return this.map.get(this.idToIndex.get(key));
     } else {
       return this.map.get(key);
@@ -57,8 +57,8 @@ export class SessionService implements ISessionService {
     return this.indexToId.get(index);
   }
   public deleteSocket(key: PlayerIndex | string) {
-    this.logger.warn('socket deleted');
-    if (typeof key === 'string') {
+    this.logger.warn("socket deleted");
+    if (typeof key === "string") {
       const index = this.idToIndex.get(key);
       this.map.delete(index);
     } else {

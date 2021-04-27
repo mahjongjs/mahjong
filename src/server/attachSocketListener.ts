@@ -1,15 +1,13 @@
 import { PlayerIndex } from '@mahjong/interfaces/PlayerState';
-import { isPlayable } from '@mahjong/logic';
-import { ClientDTO } from '@mahjong/shared/event.dto';
-
 import {
-  ACTION_ACK,
   DISPATCH_SERVER_ACTION,
   DUMP_DATA,
   INIT_STORE_DATA,
   SEND_TICKET,
 } from '@mahjong/shared/eventDefs';
-import { cloneDeep } from 'lodash';
+import { ActionInitiator } from '@mahjong/store';
+import { PayloadAction } from '@reduxjs/toolkit';
+import cloneDeep from 'lodash/cloneDeep';
 import { Socket } from 'socket.io';
 import container from './container';
 import { ILoggingService, LoggerService } from './LoggingService';
@@ -56,31 +54,14 @@ const attachSocketListener = (
   );
   socket.emit(SEND_TICKET, sessionManager.getIdFromIndex(id));
 
-  socket.on(DISPATCH_SERVER_ACTION, (action: ClientDTO) => {
-    switch (action.type) {
-      case 'play': {
-        const { playerIndex, hands } = storeService.store.store.getState();
-
-        if (isPlayable(playerIndex, hands[id], action.card)) {
-          sessionManager.getSocket(id).emit(ACTION_ACK);
-          storeService.store.store.dispatch(
-            storeService.store.actions.play({
-              player: id,
-              card: action.card,
-            })
-          );
-        } else {
-          loggingService.error('invalid action.');
-        }
-      }
-      case 'eat': {
-        // storeService.store.actions.eat({
-        //   actioner: {},
-        //   actionee: {},
-        //   played: id,
-        // });
-      }
+  socket.on(
+    DISPATCH_SERVER_ACTION,
+    (action: PayloadAction<ActionInitiator>, callback) => {
+      if (action.payload.player !== id)
+        return callback({ status: 'unauthorized' });
+      storeService.store.store.dispatch(action);
+      callback({ status: 'ok' });
     }
-  });
+  );
 };
 export default attachSocketListener;

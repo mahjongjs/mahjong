@@ -6,7 +6,7 @@ import {
 } from "@mahjong/interfaces/Card";
 import { PlayerIndex, PlayerState } from "@mahjong/interfaces/PlayerState";
 import { getUUID } from "@mahjong/logic";
-import { shuffle } from "lodash";
+import shuffle from "lodash/shuffle";
 
 const initPlayerHand: (playerIndex: PlayerIndex) => PlayerState = (
   playerIndex

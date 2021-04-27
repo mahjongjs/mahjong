@@ -1,8 +1,8 @@
-import { Container } from 'inversify';
-import { IStoreService, StoreService } from './StoreService';
-import { ISessionService, SessionService } from './SessionService';
-import { ILoggingService, LoggerService } from './LoggingService';
-import tokens from './tokens';
+import { Container } from "inversify";
+import { IStoreService, StoreService } from "./StoreService";
+import { ISessionService, SessionService } from "./SessionService";
+import { ILoggingService, LoggerService } from "./LoggingService";
+import tokens from "./tokens";
 
 const container = new Container();
 container

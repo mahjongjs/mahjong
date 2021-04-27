@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { DUMP_DATA, INIT_STORE_DATA } from "@mahjong/shared/eventDefs";
 import { io } from "socket.io-client";
 import "./test";
